@@ -1,0 +1,18 @@
+# Environment variables (contain secrets)
+.env
+.env.example
+.env.local
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Node
+node_modules/
+dist/
+
+# OS
+.DS_Store
