@@ -1,7 +1,7 @@
 # Environment variables (contain secrets)
 .env
-.env.example
 .env.local
+# NOTE: .env.example and .env.production are committed (not secrets)
 
 # Python
 .venv/
