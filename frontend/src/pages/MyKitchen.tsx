@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Plus, Search, ChefHat, AlertTriangle, Package, Check, ArrowLeft, X, Pencil, ArrowUpDown, ArrowUp, ArrowDown, Zap, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ingredients, addIngredient, removeIngredient, removeAllIngredients, updateIngredientAmount, masterIngredients, Ingredient, quickAddAll } from '../data/mockData';
+import { masterIngredients, Ingredient } from '../data/mockData';
+import { useIngredients } from '../lib/hooks';
 
 // ============================================================
 // Sort Types
@@ -53,7 +54,7 @@ function AddIngredientPanel({
   existingNames,
 }: {
   onClose: () => void;
-  onAdd: (masterId: string, amount: number) => boolean;
+  onAdd: (masterId: string, amount: number) => boolean | Promise<boolean>;
   masterIngredients: Ingredient[];
   existingNames: string[];
 }) {
@@ -82,7 +83,11 @@ function AddIngredientPanel({
   const handleConfirmAdd = () => {
     if (configuringId) {
       const masterItem = masterIngredients.find(m => m.id === configuringId);
-      onAdd(configuringId, Number(configuringAmount) || masterItem?.amount || 0);
+      const result = onAdd(configuringId, Number(configuringAmount) || masterItem?.amount || 0);
+      // Handle both sync and async onAdd
+      Promise.resolve(result).then(() => {
+        // success handled by parent
+      });
       if (masterItem) {
         setAddedName(masterItem.name);
         setTimeout(() => setAddedName(null), 2000);
@@ -310,6 +315,16 @@ export default function MyKitchen() {
 
   const isSelectionMode = state?.selectionMode || false;
   const initialSelected = state?.selectedIngredients || [];
+
+  // Use the backend-powered ingredients hook
+  const {
+    ingredients,
+    addIngredient,
+    removeIngredient,
+    removeAllIngredients,
+    updateIngredientAmount,
+    quickAddAll,
+  } = useIngredients();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -715,17 +730,19 @@ export default function MyKitchen() {
                 <AddIngredientPanel
                   onClose={() => setShowAddModal(false)}
                   onAdd={isSelectionMode ? (masterId, amount) => {
-                    const success = addIngredient(masterId, amount);
-                    if (success) {
-                      const masterItem = masterIngredients.find(m => m.id === masterId);
-                      if (masterItem) {
-                        setSelectedIngredients(prev =>
-                          prev.includes(masterItem.name) ? prev : [...prev, masterItem.name]
-                        );
+                    const result = addIngredient(masterId, amount);
+                    Promise.resolve(result).then((success) => {
+                      if (success) {
+                        const masterItem = masterIngredients.find(m => m.id === masterId);
+                        if (masterItem) {
+                          setSelectedIngredients(prev =>
+                            prev.includes(masterItem.name) ? prev : [...prev, masterItem.name]
+                          );
+                        }
+                        setRefreshKey(k => k + 1);
                       }
-                      setRefreshKey(k => k + 1);
-                    }
-                    return success;
+                    });
+                    return result;
                   } : addIngredient}
                   masterIngredients={masterIngredients}
                   existingNames={ingredients.map(i => i.name)}

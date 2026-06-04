@@ -2,14 +2,18 @@ import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Clock, Bookmark, BookmarkCheck, ChefHat, Share2 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { getRecipeById, toggleRecipeSaved, ingredients as kitchenIngredients } from '../data/mockData';
+import { getRecipeById } from '../data/mockData';
+import { useSavedRecipes, useIngredients } from '../lib/hooks';
 
 export default function RecipeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const recipe = getRecipeById(id || '');
-  const [isSaved, setIsSaved] = useState(recipe?.isSaved || false);
+  const { isSaved, toggle } = useSavedRecipes();
+  const { ingredients: kitchenIngredients } = useIngredients();
   const [selectedDiners, setSelectedDiners] = useState(2);
+
+  const saved = recipe ? isSaved(recipe.id) : false;
 
   // Check if a recipe ingredient exists in the kitchen
   const isIngredientOwned = (recipeIng: string): boolean => {
@@ -89,14 +93,14 @@ export default function RecipeDetail() {
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              onClick={() => setIsSaved(toggleRecipeSaved(recipe.id))}
+              onClick={() => toggle(recipe.id)}
               className={`p-2 rounded-xl transition-colors ${
-                isSaved 
-                  ? 'bg-primary-100 text-primary-600' 
+                saved
+                  ? 'bg-primary-100 text-primary-600'
                   : 'hover:bg-gray-100 text-gray-600'
               }`}
             >
-              {isSaved ? (
+              {saved ? (
                 <BookmarkCheck className="w-6 h-6 fill-current" />
               ) : (
                 <Bookmark className="w-6 h-6" />
@@ -250,14 +254,14 @@ export default function RecipeDetail() {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => setIsSaved(toggleRecipeSaved(recipe.id))}
+            onClick={() => toggle(recipe.id)}
             className={`px-8 py-4 rounded-xl font-semibold text-lg transition-all shadow-lg ${
-              isSaved
+              saved
                 ? 'bg-red-100 text-red-700 hover:bg-red-200'
                 : 'bg-gradient-to-r from-primary-500 to-primary-600 text-white hover:from-primary-600 hover:to-primary-700'
             }`}
           >
-            {isSaved ? (
+            {saved ? (
               <span className="flex items-center gap-2">
                 <BookmarkCheck className="w-5 h-5 fill-current" />
                 Remove from Cookbook

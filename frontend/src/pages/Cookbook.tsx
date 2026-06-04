@@ -3,17 +3,19 @@ import { Link } from 'react-router-dom';
 import { BookOpen, Clock, Search, Filter, Bookmark } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { recipes, cookingMethods } from '../data/mockData';
+import { useSavedRecipes } from '../lib/hooks';
 
 export default function Cookbook() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [showSavedOnly, setShowSavedOnly] = useState(true);
+  const { isSaved } = useSavedRecipes();
 
   const filteredRecipes = recipes.filter(recipe => {
     const matchesSearch = recipe.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       recipe.description.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesMethod = !selectedMethod || recipe.method === selectedMethod;
-    const matchesSaved = !showSavedOnly || recipe.isSaved;
+    const matchesSaved = !showSavedOnly || isSaved(recipe.id);
     return matchesSearch && matchesMethod && matchesSaved;
   });
 
@@ -102,7 +104,7 @@ export default function Cookbook() {
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                     />
                   )}
-                  {recipe.isSaved && (
+                    {isSaved(recipe.id) && (
                     <div className="absolute top-3 right-3 p-2 bg-white/90 rounded-full shadow-md">
                       <Bookmark className="w-4 h-4 text-primary-600 fill-current" />
                     </div>
