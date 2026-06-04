@@ -2,16 +2,19 @@ import { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Refrigerator, ChefHat, BookOpen, AlertTriangle, Zap, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { ingredients, recipes } from '../data/mockData';
 import { useAuth } from '../utils/auth';
+import { useIngredients, useSavedRecipes } from '../lib/hooks';
 
 export default function Home() {
   const { userName } = useAuth();
+  const { ingredients } = useIngredients();
+  const { savedIds } = useSavedRecipes();
+
   const expiringSoon = ingredients
     .filter(ing => ing.expiryDays <= 5)
     .sort((a, b) => a.expiryDays - b.expiryDays);
 
-  const savedRecipes = recipes.filter(r => r.isSaved).length;
+  const savedRecipesCount = savedIds.size;
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showScrollHint, setShowScrollHint] = useState(true);
@@ -99,7 +102,7 @@ export default function Home() {
                 </div>
                 <span className="text-xs text-gray-500 font-medium">Cookbook</span>
               </div>
-              <p className="text-xl font-bold text-gray-900">{savedRecipes}</p>
+              <p className="text-xl font-bold text-gray-900">{savedRecipesCount}</p>
               <p className="text-xs text-gray-400">saved</p>
             </Link>
           </motion.div>
